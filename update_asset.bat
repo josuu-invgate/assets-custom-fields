@@ -91,7 +91,7 @@ for /f "delims=" %%a in ('curl -s --location "%url_base%/oauth2/token/" ^
 
 :: Exit if authentication fails
 if "!token!"=="" (
-    if defined DEBUG echo [DEBUG] SALIENDO: Fallo la autenticacion (Token vacio). Revisa el Client ID y Secret.
+    if defined DEBUG echo [DEBUG] SALIENDO: Fallo la autenticacion ^(Token vacio^). Revisa el Client ID y Secret.
     exit /b
 ) else (
     if defined DEBUG echo [DEBUG] Token obtenido con exito.
@@ -136,23 +136,47 @@ if "!id_ci!"=="" (
 :: ==============================================================================
 
 if defined DEBUG (
-    echo [DEBUG] Enviando datos ^(POST^) a InvGate...
-    echo [DEBUG] Payload enviado: [{"custom_field_id": %custom_field_id1%, "ci_id": !id_ci!, "ci_type": "computer", "value": "!field_value1!"},{"custom_field_id": %custom_field_id2%, "ci_id": !id_ci!, "ci_type": "computer", "value": "!field_value2!"}]
+    echo [DEBUG] Iniciando envio de datos a InvGate...
     
-    curl -s -X "POST" "%url_base%/public-api/v2/custom-field-value-cis/multiple/" ^
+    :: --- POST 1: Custom Field 1 ---
+    echo [DEBUG] Enviando Dato 1...
+    echo [DEBUG] Payload 1: {"custom_field_id": %custom_field_id1%, "ci_id": !id_ci!, "ci_type": "computer", "value": "!field_value1!"}
+    
+    curl -s -X "POST" "%url_base%/public-api/v2/custom-field-value-cis/" ^
       -H "accept: application/json" ^
       -H "Content-Type: application/json" ^
       -H "Authorization: Bearer !token!" ^
-      -d "[{\"custom_field_id\": %custom_field_id1%, \"ci_id\": !id_ci!, \"ci_type\": \"computer\", \"value\": \"!field_value1!\"},{\"custom_field_id\": %custom_field_id2%, \"ci_id\": !id_ci!, \"ci_type\": \"computer\", \"value\": \"!field_value2!\"}]"
+      -d "{\"custom_field_id\": %custom_field_id1%, \"ci_id\": !id_ci!, \"ci_type\": \"computer\", \"value\": \"!field_value1!\"}"
+      
+    echo.
+    
+    :: --- POST 2: Custom Field 2 ---
+    echo [DEBUG] Enviando Dato 2...
+    echo [DEBUG] Payload 2: {"custom_field_id": %custom_field_id2%, "ci_id": !id_ci!, "ci_type": "computer", "value": "!field_value2!"}
+    
+    curl -s -X "POST" "%url_base%/public-api/v2/custom-field-value-cis/" ^
+      -H "accept: application/json" ^
+      -H "Content-Type: application/json" ^
+      -H "Authorization: Bearer !token!" ^
+      -d "{\"custom_field_id\": %custom_field_id2%, \"ci_id\": !id_ci!, \"ci_type\": \"computer\", \"value\": \"!field_value2!\"}"
       
     echo.
     echo [DEBUG] Proceso finalizado.
+
 ) else (
-    curl -s -X "POST" "%url_base%/public-api/v2/custom-field-value-cis/multiple/" ^
+
+    :: --- Ejecucion Silenciosa ---
+    curl -s -X "POST" "%url_base%/public-api/v2/custom-field-value-cis/" ^
       -H "accept: application/json" ^
       -H "Content-Type: application/json" ^
       -H "Authorization: Bearer !token!" ^
-      -d "[{\"custom_field_id\": %custom_field_id1%, \"ci_id\": !id_ci!, \"ci_type\": \"computer\", \"value\": \"!field_value1!\"},{\"custom_field_id\": %custom_field_id2%, \"ci_id\": !id_ci!, \"ci_type\": \"computer\", \"value\": \"!field_value2!\"}]" >nul 2>&1
+      -d "{\"custom_field_id\": %custom_field_id1%, \"ci_id\": !id_ci!, \"ci_type\": \"computer\", \"value\": \"!field_value1!\"}" >nul 2>&1
+
+    curl -s -X "POST" "%url_base%/public-api/v2/custom-field-value-cis/" ^
+      -H "accept: application/json" ^
+      -H "Content-Type: application/json" ^
+      -H "Authorization: Bearer !token!" ^
+      -d "{\"custom_field_id\": %custom_field_id2%, \"ci_id\": !id_ci!, \"ci_type\": \"computer\", \"value\": \"!field_value2!\"}" >nul 2>&1
 )
 
 exit /b
