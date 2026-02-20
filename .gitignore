@@ -1,0 +1,24 @@
+# ==========================================
+# Ignorar archivos de configuracion local
+# ==========================================
+.env
+
+# ==========================================
+# Ignorar archivos de Logs (por si agregas luego)
+# ==========================================
+*.log
+logs/
+
+# ==========================================
+# Archivos del sistema operativo (Windows)
+# ==========================================
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# ==========================================
+# Archivos temporales o de texto locales
+# ==========================================
+pm.properties.txt
