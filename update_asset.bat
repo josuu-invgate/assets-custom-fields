@@ -5,10 +5,8 @@ setlocal enabledelayedexpansion
 :: AREA DE CONFIGURACION (Modificar estos valores antes de ejecutar/entregar)
 :: ==============================================================================
 
-:: 1. Rutas locales y claves de busqueda
+:: 1. Ruta del archivo properties local
 set "properties_file=C:\pm.properties.txt"
-set "search_key1=hostaccess.sjpm.SESSION_BTP-TK180.commlink.JSAPI.lineIATA"
-set "search_key2=pm.sjpm.devices"
 
 :: 2. Credenciales y API de InvGate
 set "url_base=https://your-instance.invgate.net"
@@ -34,31 +32,54 @@ if /I "%~1"=="-d" (
 )
 
 :: ==============================================================================
-:: SECTION 1: LOCAL DATA EXTRACTION
+:: SECTION 1: LOCAL DATA EXTRACTION (Busqueda condicional)
 :: ==============================================================================
+
+set "field_value1="
+set "field_value2="
 
 if defined DEBUG echo [DEBUG] Buscando datos en: %properties_file%
 
 if exist "%properties_file%" (
-    for /f "tokens=2 delims==" %%v in ('findstr /C:"%search_key1%" "%properties_file%"') do (
+    
+    :: Opcion 1: Boardpass
+    for /f "tokens=2 delims==" %%v in ('findstr /C:"hostaccess.sjpm.SESSION_Boardpass.commlink.JSAPI.lineIATA" "%properties_file%" 2^>nul') do (
         set "field_value1=%%v"
-    )
-    for /f "tokens=2 delims==" %%v in ('findstr /C:"%search_key2%" "%properties_file%"') do (
-        set "field_value2=%%v"
+        set "field_value2=Boardpass"
     )
     
+    :: Opcion 2: Bagtag (Solo busca si no encontro el anterior)
+    if "!field_value1!"=="" (
+        for /f "tokens=2 delims==" %%v in ('findstr /C:"hostaccess.sjpm.SESSION_Bagtag.commlink.JSAPI.lineIATA" "%properties_file%" 2^>nul') do (
+            set "field_value1=%%v"
+            set "field_value2=Bagtag"
+        )
+    )
+
+    :: Opcion 3: ATB-TK180 (Solo busca si no encontro los anteriores)
+    if "!field_value1!"=="" (
+        for /f "tokens=2 delims==" %%v in ('findstr /C:"hostaccess.sjpm.SESSION_ATB-TK180.commlink.JSAPI.lineIATA" "%properties_file%" 2^>nul') do (
+            set "field_value1=%%v"
+            set "field_value2=ATB=TK180"
+        )
+    )
+
+    :: Opcion 4: BTP-TK180 (Solo busca si no encontro los anteriores)
+    if "!field_value1!"=="" (
+        for /f "tokens=2 delims==" %%v in ('findstr /C:"hostaccess.sjpm.SESSION_BTP-TK180.commlink.JSAPI.lineIATA" "%properties_file%" 2^>nul') do (
+            set "field_value1=%%v"
+            set "field_value2=BTP-TK180"
+        )
+    )
+
     if defined DEBUG echo [DEBUG] Valores extraidos - Key1: !field_value1! ^| Key2: !field_value2!
 ) else (
     if defined DEBUG echo [DEBUG] ERROR: No se encontro el archivo %properties_file%
 )
 
-:: Terminate execution if the required values are not found
+:: Terminar ejecucion si no se encontro ninguna de las claves
 if "!field_value1!"=="" (
-    if defined DEBUG echo [DEBUG] SALIENDO: No se encontro el valor de Key 1.
-    exit /b
-)
-if "!field_value2!"=="" (
-    if defined DEBUG echo [DEBUG] SALIENDO: No se encontro el valor de Key 2.
+    if defined DEBUG echo [DEBUG] SALIENDO: No se encontro ninguna de las claves en el archivo.
     exit /b
 )
 
